@@ -1,7 +1,7 @@
 use std::io;
 use std::io::{stdout, Write};
 use othello::*;
-// use othello::board::disp_bitboard;
+use core::arch::x86_64::*;
 use othello::board::*;
 
 fn t(t: u64) -> u64 {
@@ -14,13 +14,9 @@ fn main() {
     // println!("Play with friend > input 0");
     // println!("Play with computer > input 1");
     // print!("mode > ");
-    let a = U256::from_u64(1u64);
-    let b = U256::from_u64(2u64);
-    let c = &a >> 3usize;
-    let d = &a - &b;
-    let x = &a + &b;
-
     let mut board = Board::new();
+    // disp_bitboard(unsafe { rev_patt_simd2(board.black, board.white, 26) });
+    // let x = unsafe { _mm256_set1_epi64x(board.black as i64) };
     loop {
         println!("{}", board);
         if board.is_finished() {
@@ -32,9 +28,8 @@ fn main() {
             board.turn = !board.turn;
             continue;
         }
-        // let legal = board.legal_patt();
         let mut pos: usize = 0;
-        println!{"You are {}", if board.turn { "⚫ BLACK ⚫" } else { "⚪ WHITE ⚪" }}
+        println!("You are {}", if board.turn { "⚫ BLACK ⚫" } else { "⚪ WHITE ⚪" });
         loop {
             print!("Please input coordinate (example: \"c4\" or \"C4\") > ");
             io::stdout().flush().unwrap();

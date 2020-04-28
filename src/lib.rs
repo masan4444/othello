@@ -1,6 +1,5 @@
 #[macro_use]
 
-extern crate bitflags;
 pub mod board;
 
 #[cfg(test)]

@@ -63,7 +63,7 @@ impl U256 {
         Self::M256i(unsafe { _mm256_andnot_si256(self.__m256i(), _rhs.__m256i()) })
     }
     #[inline]
-    pub fn upper_bit(&self) -> U256 {
+    pub fn first_set(&self) -> U256 {
         let flip_vertical_shuffle_table_256: __m256i = unsafe { _mm256_set_epi8(
             24, 25, 26, 27, 28, 29, 30, 31,
             16, 17, 18, 19, 20, 21, 22, 23,
@@ -92,8 +92,8 @@ impl U256 {
 }
 impl fmt::Display for U256 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-
         let mut out = String::from("  ");
+
         write!(f, "{}", out)
     }
 }
@@ -174,6 +174,13 @@ pub fn disp_bitboard(bitboard: u64) {
     println!("");
 }
 
+pub fn disp_bitboardx4(bitboards: __m256i) {
+    disp_bitboard(unsafe { _mm_extract_epi64(_mm256_extractf128_si256(bitboards, 0), 0) as u64 });
+    disp_bitboard(unsafe { _mm_extract_epi64(_mm256_extractf128_si256(bitboards, 0), 1) as u64 });
+    disp_bitboard(unsafe { _mm_extract_epi64(_mm256_extractf128_si256(bitboards, 1), 0) as u64 });
+    disp_bitboard(unsafe { _mm_extract_epi64(_mm256_extractf128_si256(bitboards, 1), 1) as u64 });
+}
+
 const HIGH_ORDER_MASKS: [u64; 4] = [
     BIT_PATTERN::LOWER_MASK,
     BIT_PATTERN::RIGHT_MASK,
@@ -204,8 +211,8 @@ pub fn rev_patt(p: u64, o: u64, pos: usize) -> u64 {
     }
     reversed
 }
-// #[inline]
-pub unsafe fn rev_patt_simd(p: u64, o: u64, pos: usize) -> u64 {
+#[inline]
+pub unsafe fn rev_patt_simd_(p: u64, o: u64, pos: usize) -> u64 {
     let o_side_masked = o & BIT_PATTERN::SIDE_MASK;
     let p = U256::from_u64(p);
     let o = U256::from_u64_4(o, o_side_masked, o_side_masked, o_side_masked);
@@ -215,7 +222,7 @@ pub unsafe fn rev_patt_simd(p: u64, o: u64, pos: usize) -> u64 {
         BIT_PATTERN::LOWER_LEFT_MASK,
         BIT_PATTERN::LOWER_RIGHT_MASK
     ) >> (63 - pos);
-    let outflank = &o.and_not(&mask).upper_bit() & &p;
+    let outflank = &o.and_not(&mask).first_set() & &p;
     let reversed = &(&-&outflank << 1) & &mask;
     let mask = &U256::from_u64_4(
         BIT_PATTERN::UPPER_MASK,
@@ -226,7 +233,81 @@ pub unsafe fn rev_patt_simd(p: u64, o: u64, pos: usize) -> u64 {
     let outflank = &(&mask & &(&(&o | &!&mask) + &U256::from_u64(1))) & &p;
     let reversed = &reversed | &(&(&(&outflank - &outflank.nonzero()) & &mask));
     let hor = reversed.hor();
-    (_mm_cvtsi128_si64(hor) & _mm_cvtsi128_si64x(hor)) as u64
+    _mm_cvtsi128_si64(hor) as u64
+}
+
+#[inline]
+pub unsafe fn _mm256_firstset_epi64(bits: __m256i) -> __m256i {
+    let flip_vertical_shuffle_table_256: __m256i = _mm256_set_epi8(
+        24, 25, 26, 27, 28, 29, 30, 31,
+        16, 17, 18, 19, 20, 21, 22, 23,
+         8,  9, 10, 11, 12, 13, 14, 15,
+         0,  1,  2,  3,  4,  5,  6,  7
+    );
+
+    let mut bits = _mm256_or_si256(bits, _mm256_srli_epi64(bits, 1));
+    bits = _mm256_or_si256(bits, _mm256_srli_epi64(bits, 2));
+    bits = _mm256_or_si256(bits, _mm256_srli_epi64(bits, 4));
+    bits = _mm256_andnot_si256(_mm256_srli_epi64(bits, 1), bits);
+    bits = _mm256_shuffle_epi8(bits, flip_vertical_shuffle_table_256);
+    bits = _mm256_and_si256(bits, _mm256_sub_epi64(_mm256_setzero_si256(), bits));
+    _mm256_shuffle_epi8(bits, flip_vertical_shuffle_table_256)
+}
+#[inline]
+pub unsafe fn _mm256_noeqzero_epi64(bits: __m256i) -> __m256i {
+    _mm256_add_epi64(_mm256_cmpeq_epi64(bits, _mm256_setzero_si256()), _mm256_set1_epi64x(1))
+}
+#[inline]
+pub unsafe fn rev_patt_simd(p: u64, o: u64, pos: usize) -> u64 {
+    let o_side_masked = o & BIT_PATTERN::SIDE_MASK;
+    let p = _mm256_set1_epi64x(p as i64);
+    let o = _mm256_set_epi64x(o as i64, o_side_masked as i64, o_side_masked as i64, o_side_masked as i64);
+    // let mask = () >> (63 - pos);
+    let mask = _mm256_srli_epi64(_mm256_set_epi64x(
+        BIT_PATTERN::LOWER_MASK as i64,
+        BIT_PATTERN::RIGHT_MASK as i64,
+        BIT_PATTERN::LOWER_LEFT_MASK as i64,
+        BIT_PATTERN::LOWER_RIGHT_MASK as i64,
+    ), 63 - pos as i32);
+    // let outflank = (BIT_PATTERN::UPPER_LEFT_CORNER >> (!o & mask).leading_zeros()) & p;
+    let outflank = _mm256_and_si256(_mm256_firstset_epi64(_mm256_andnot_si256(o, mask)), p);
+    // let reversed = (-outflank << 1) & mask;
+    let mut reserved = _mm256_and_si256(_mm256_slli_epi64(_mm256_sub_epi64(_mm256_setzero_si256(), outflank), 1), mask);
+    // let mask = () << pos;
+    let mask = _mm256_slli_epi64(_mm256_set_epi64x(
+        BIT_PATTERN::UPPER_MASK as i64,
+        BIT_PATTERN::LEFT_MASK as i64,
+        BIT_PATTERN::UPPER_RIGHT_MASK as i64,
+        BIT_PATTERN::UPPER_LEFT_MASK as i64,
+    ), pos as i32);
+    // let outflank = ((!mask | o) + 1) & mask & &p;
+    let outflank =
+        _mm256_and_si256(
+            _mm256_and_si256(
+                // (!mask | o) + 1
+                _mm256_add_epi64(
+                    // !mask | o
+                    _mm256_or_si256(
+                        // !mask
+                        _mm256_andnot_si256(
+                            mask, _mm256_set1_epi8(0xffu8 as i8)
+                        ), o
+                    ), _mm256_set1_epi64x(1)
+                ), mask
+            ), p
+        );
+    // let reversed = reversed | (((outflank - outflank != 0) & mask));
+    reserved = _mm256_or_si256(
+        reserved, _mm256_and_si256(
+            // outflank - outflank != 0
+            _mm256_sub_epi64(
+                outflank, _mm256_noeqzero_epi64(outflank)
+            ) ,mask
+        )
+    );
+    let reseved = _mm_or_si128(_mm256_castsi256_si128(reserved),_mm256_extractf128_si256(reserved, 1));
+    let tmp = _mm_or_si128(reseved, _mm_alignr_epi8(reseved, reseved, 8));
+    _mm_cvtsi128_si64(tmp) as u64
 }
 
 #[inline]
@@ -369,8 +450,6 @@ fn legal_diag_A1H8(p: u64, o: u64) -> u64 {
 }
 
 pub fn legal_patt(p: u64, o: u64) -> u64 {
-    // disp_bitboard(legal_diag_A1H8(p, o));
-    // disp_bitboard(legal_diag_A8H1(p, o));
     legal_horizontal(p, o) | legal_vertical(p, o) |
     legal_diag_A1H8(p, o) | legal_diag_A8H1(p, o)
 }
@@ -432,9 +511,15 @@ impl Board {
     }
     pub fn rev_patt(&self, pos: usize) -> u64 {
         if self.turn {
-            rev_patt(self.black, self.white, pos)
+            let new = unsafe { rev_patt_simd(self.black, self.white, pos) };
+            let old = rev_patt(self.black, self.white, pos);
+            assert_eq!(new, rev_patt(self.black, self.white, pos));
+            new
         } else {
-            rev_patt(self.white, self.black, pos)
+            let new = unsafe { rev_patt_simd(self.white, self.black, pos) };
+            let old = rev_patt(self.white, self.black, pos);
+            assert_eq!(new, rev_patt(self.white, self.black, pos));
+            new
         }
     }
 }
