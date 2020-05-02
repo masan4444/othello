@@ -1,5 +1,5 @@
 [package]
-name = "othello"
+name = "reversi"
 version = "0.1.0"
 authors = ["masan4444 <masanori0213@gmail.com>"]
 edition = "2018"

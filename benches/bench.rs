@@ -1,7 +1,7 @@
 #![feature(test)]
 
 extern crate test;
-use othello::*;
+use reversi::*;
 
 // #[bench]
 // fn count_ones_bench(b: &mut test::Bencher) {

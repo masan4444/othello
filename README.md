@@ -1,9 +1,9 @@
-# Othello
-This is othello game wriiten in Rust.
+# Reversi
+This is reversi game wriiten in Rust.
 ### Install
 ```
-git clone https://github.com/masan4444/othello.git
-cd othello
+git clone https://github.com/masan4444/reversi.git
+cd reversi
 ```
 ### Run
 ```
