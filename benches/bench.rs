@@ -53,14 +53,6 @@ fn rev_patt_simd_bench(b: &mut test::Bencher) {
     })
 }
 #[bench]
-fn legal_patt_bench(b: &mut test::Bencher) {
-    let s = test::black_box(board::BIT_PATTERN::BLACK_INITIAL);
-    let e = test::black_box(board::BIT_PATTERN::WHITE_INITIAL);
-    b.iter(|| {
-        board::legal_patt(s, e);
-    })
-}
-#[bench]
 fn legal_patt_simd_bench(b: &mut test::Bencher) {
     let s = test::black_box(board::BIT_PATTERN::BLACK_INITIAL);
     let e = test::black_box(board::BIT_PATTERN::WHITE_INITIAL);
