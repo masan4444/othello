@@ -323,6 +323,9 @@ impl Board {
             new
         }
     }
+    pub fn result(&self) -> (u32, u32) {
+        (self.black.count_ones(), self.white.count_ones())
+    }
 }
 impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

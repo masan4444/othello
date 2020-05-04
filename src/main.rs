@@ -21,6 +21,13 @@ fn main() {
             println!("{}", board);
             if board.is_finished() {
                 println!("Finish!");
+                let (black_count, white_count) = board.result();
+                println!("BLACK: {}, WHITE: {}", black_count, white_count);
+                if black_count == white_count {
+                    println!("draw!");
+                    break;
+                }
+                println!("{} wins!", if black_count > white_count { "BLACK" } else { "WHITE" });
                 break;
             }
             if board.is_pass() {
