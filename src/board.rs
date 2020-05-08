@@ -40,11 +40,6 @@ pub mod BIT_PATTERN {
 
 }
 
-#[inline]
-pub fn count_ones(bitboard: u64) -> u32 {
-    (bitboard as i64).count_ones()
-}
-
 pub fn disp_bitboard(bitboard: u64) {
     for i in (0..8).rev() {
         for j in (0..8).rev() {
@@ -266,6 +261,9 @@ pub fn is_finished(p: u64, o: u64) -> bool {
     legal_patt_simd(p, o) == 0 && legal_patt_simd(o, p) == 0
 }
 
+const BLACK: bool = true;
+const WHITE: bool = false;
+
 #[derive(Debug)]
 pub struct Board {
     pub black: u64,
@@ -277,12 +275,15 @@ impl Board {
         Self {
             black: BIT_PATTERN::BLACK_INITIAL,
             white: BIT_PATTERN::WHITE_INITIAL,
-            turn: true,
+            turn: BLACK,
         }
+    }
+    pub fn board(&self, color: bool) -> u64 {
+        if color == BLACK { self.black } else { self.white }
     }
     pub fn reverse(&mut self, rev: u64, pos: usize) {
         let pos = 1u64 << pos;
-        if self.turn {
+        if self.turn == BLACK {
             self.black ^= pos | rev;
             self.white ^= rev;
         } else {
@@ -291,37 +292,17 @@ impl Board {
         }
     }
     pub fn is_pass(&self) -> bool {
-        if self.turn {
-            is_pass(self.black, self.white)
-        } else {
-            is_pass(self.white, self.black)
-        }
+        is_pass(self.board(self.turn), self.board(!self.turn))
     }
     pub fn is_finished(&self) -> bool {
-        if self.turn {
-            is_finished(self.black, self.white)
-        } else {
-            is_finished(self.white, self.black)
-        }
+        is_finished(self.board(self.turn), self.board(!self.turn))
     }
     pub fn legal_patt(&self) -> u64 {
-        if self.turn {
-            legal_patt_simd(self.black, self.white)
+        legal_patt_simd(self.board(self.turn), self.board(!self.turn))
 
-        } else {
-            legal_patt_simd(self.white, self.black)
-        }
     }
     pub fn rev_patt(&self, pos: usize) -> u64 {
-        if self.turn {
-            let new = unsafe { rev_patt_simd(self.black, self.white, pos) };
-            // assert_eq!(new, rev_patt(self.black, self.white, pos));
-            new
-        } else {
-            let new = unsafe { rev_patt_simd(self.white, self.black, pos) };
-            // assert_eq!(new, rev_patt(self.white, self.black, pos));
-            new
-        }
+        unsafe { rev_patt_simd(self.board(self.turn), self.board(!self.turn), pos) }
     }
     pub fn result(&self) -> (u32, u32) {
         (self.black.count_ones(), self.white.count_ones())
