@@ -1,7 +1,7 @@
-use std::io;
-use std::io::{Write};
-use reversi::com;
 use reversi::board::*;
+use reversi::com;
+use std::io;
+use std::io::Write;
 
 const BLACK: bool = true;
 const WHITE: bool = false;
@@ -15,9 +15,14 @@ fn main() {
     io::stdout().flush().unwrap();
 
     let mut mode = String::new();
-    io::stdin().read_line(&mut mode).expect("Failed to read line");
+    io::stdin()
+        .read_line(&mut mode)
+        .expect("Failed to read line");
     let mode: usize = mode.trim().parse().expect("Please type a number!");
-    println!("--- {} mode ---", if mode == 1 { "friend" } else { "computer" });
+    println!(
+        "--- {} mode ---",
+        if mode == 1 { "friend" } else { "computer" }
+    );
 
     let mut board = Board::new();
     let mut index = 0;
@@ -32,11 +37,25 @@ fn main() {
             if black_count == white_count {
                 println!("draw!");
             } else {
-                println!("{} wins!", if black_count > white_count { "BLACK" } else { "WHITE" });
+                println!(
+                    "{} wins!",
+                    if black_count > white_count {
+                        "BLACK"
+                    } else {
+                        "WHITE"
+                    }
+                );
             }
             break;
         } else if board.is_pass() {
-            println!("{} passed!", if board.turn { "⚫ BLACK ⚫" } else { "⚪ WHITE ⚪" });
+            println!(
+                "{} passed!",
+                if board.turn {
+                    "⚫ BLACK ⚫"
+                } else {
+                    "⚪ WHITE ⚪"
+                }
+            );
         } else {
             if mode == 2 && index == 0 {
                 print!("Select your color > ");
@@ -50,12 +69,20 @@ fn main() {
                     com::choose_pos(board.board(com_color), board.board(!com_color), index)
                 };
             } else {
-                println!("You are {}", if board.turn { "⚫ BLACK ⚫" } else { "⚪ WHITE ⚪" });
+                println!(
+                    "You are {}",
+                    if board.turn {
+                        "⚫ BLACK ⚫"
+                    } else {
+                        "⚪ WHITE ⚪"
+                    }
+                );
                 loop {
                     print!("Enter coordinate (example: \"c4\") > ");
                     io::stdout().flush().unwrap();
                     let mut coordinate = String::new();
-                    io::stdin().read_line(&mut coordinate)
+                    io::stdin()
+                        .read_line(&mut coordinate)
                         .expect("Failed to read line");
                     pos = match coordinate_to_pos(&coordinate.trim()) {
                         Some(pos) => {
@@ -64,11 +91,11 @@ fn main() {
                                 continue;
                             }
                             pos
-                        },
+                        }
                         None => {
                             println!("invalid input");
                             continue;
-                        },
+                        }
                     };
                     break;
                 }
@@ -83,16 +110,12 @@ fn main() {
 
 fn coordinate_to_pos(cdn: &str) -> Option<usize> {
     if cdn.len() != 2 {
-        return Option::None
+        return Option::None;
     }
-    let w = cdn.to_uppercase().chars()
-                      .nth(0).unwrap() as isize
-                      - 'A' as isize;
-    let h = cdn.to_uppercase().chars()
-                      .nth(1).unwrap() as isize
-                      - '1' as isize;
+    let w = cdn.to_uppercase().chars().nth(0).unwrap() as isize - 'A' as isize;
+    let h = cdn.to_uppercase().chars().nth(1).unwrap() as isize - '1' as isize;
     if h < 0 || h >= 8 || w < 0 || w >= 8 {
-        return Option::None
+        return Option::None;
     }
     Option::Some(63 - (w + h * 8) as usize)
 }

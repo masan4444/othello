@@ -1,5 +1,5 @@
-use std::fmt;
 use packed_simd::*;
+use std::fmt;
 
 /*
 ------- bitboard pos ------
@@ -19,34 +19,36 @@ use packed_simd::*;
 */
 
 pub mod BIT_PATTERN {
-    pub const BLACK_INITIAL: u64     = 0x0000000810000000;
-    pub const WHITE_INITIAL: u64     = 0x0000001008000000;
+    pub const BLACK_INITIAL: u64 = 0x0000000810000000;
+    pub const WHITE_INITIAL: u64 = 0x0000001008000000;
 
-    pub const LOWER_MASK: u64        = 0x0080808080808080;
-    pub const RIGHT_MASK: u64        = 0x7f00000000000000;
-    pub const LOWER_LEFT_MASK: u64   = 0x0102040810204000;
-    pub const LOWER_RIGHT_MASK: u64  = 0x0040201008040201;
+    pub const LOWER_MASK: u64 = 0x0080808080808080;
+    pub const RIGHT_MASK: u64 = 0x7f00000000000000;
+    pub const LOWER_LEFT_MASK: u64 = 0x0102040810204000;
+    pub const LOWER_RIGHT_MASK: u64 = 0x0040201008040201;
 
-    pub const UPPER_MASK: u64        = 0x0101010101010100;
-    pub const LEFT_MASK: u64         = 0x00000000000000FE;
-    pub const UPPER_RIGHT_MASK: u64  = 0x0002040810204080;
-    pub const UPPER_LEFT_MASK: u64   = 0x8040201008040200;
+    pub const UPPER_MASK: u64 = 0x0101010101010100;
+    pub const LEFT_MASK: u64 = 0x00000000000000FE;
+    pub const UPPER_RIGHT_MASK: u64 = 0x0002040810204080;
+    pub const UPPER_LEFT_MASK: u64 = 0x8040201008040200;
 
-    pub const SIDE_MASK: u64         = 0x7e7e7e7e7e7e7e7e;
+    pub const SIDE_MASK: u64 = 0x7e7e7e7e7e7e7e7e;
     pub const UPPER_LEFT_CORNER: u64 = 0x8000000000000000;
-    pub const LOWER_END_LINE: u64    = 0x00000000000000ff;
+    pub const LOWER_END_LINE: u64 = 0x00000000000000ff;
 
-    pub const ALL_MASK: u64          = 0xffffffffffffffff;
-
+    pub const ALL_MASK: u64 = 0xffffffffffffffff;
 }
 
 pub fn disp_bitboard(bitboard: u64) {
     for i in (0..8).rev() {
         for j in (0..8).rev() {
-            print!("{} ", match bitboard >> (i * 8 + j) & 1 {
-                1 => "●",
-                _ => "□"
-            });
+            print!(
+                "{} ",
+                match bitboard >> (i * 8 + j) & 1 {
+                    1 => "●",
+                    _ => "□",
+                }
+            );
         }
         println!("");
     }
@@ -91,10 +93,10 @@ pub fn rev_patt(p: u64, o: u64, pos: usize) -> u64 {
 }
 #[inline]
 pub unsafe fn first_set(bits: u64x4) -> u64x4 {
-    let mut bits = bits | (bits >>  1);
-    bits = bits | (bits >>  2);
-    bits = bits | (bits >>  4);
-    bits = bits | (bits >>  8);
+    let mut bits = bits | (bits >> 1);
+    bits = bits | (bits >> 2);
+    bits = bits | (bits >> 4);
+    bits = bits | (bits >> 8);
     bits = bits | (bits >> 16);
     bits = bits | (bits >> 32);
     let lowers: u64x4 = bits >> 1;
@@ -110,16 +112,18 @@ pub unsafe fn noeqzero(bits: u64x4) -> u64x4 {
 #[inline]
 pub unsafe fn rev_patt_simd(p: u64, o: u64, pos: usize) -> u64 {
     let p = u64x4::splat(p);
-    let o = u64x4::splat(o) & u64x4::new(
-        BIT_PATTERN::ALL_MASK,
-        BIT_PATTERN::SIDE_MASK,
-        BIT_PATTERN::SIDE_MASK,
-        BIT_PATTERN::SIDE_MASK);
+    let o = u64x4::splat(o)
+        & u64x4::new(
+            BIT_PATTERN::ALL_MASK,
+            BIT_PATTERN::SIDE_MASK,
+            BIT_PATTERN::SIDE_MASK,
+            BIT_PATTERN::SIDE_MASK,
+        );
     let mask = u64x4::new(
         BIT_PATTERN::LOWER_MASK,
         BIT_PATTERN::RIGHT_MASK,
         BIT_PATTERN::LOWER_LEFT_MASK,
-        BIT_PATTERN::LOWER_RIGHT_MASK
+        BIT_PATTERN::LOWER_RIGHT_MASK,
     ) >> (63 - pos) as u32;
     let outflank = first_set(!o & mask) & p;
     let mut reversed = u64x4::from_cast(-i64x4::from_cast(outflank) << 1) & mask;
@@ -212,8 +216,8 @@ pub fn rotate_pseudo_45_anti_clockwise(bitboard: u64) -> u64 {
     const MASK2: u64 = 0xcccccccccccccccc; //0xcccccccccccccccc
     const MASK3: u64 = 0xf0f0f0f0f0f0f0f0;
     let mut bitboard = bitboard ^ (MASK1 & (bitboard ^ bitboard.rotate_right(8)));
-    bitboard =         bitboard ^ (MASK2 & (bitboard ^ bitboard.rotate_right(16)));
-    return             bitboard ^ (MASK3 & (bitboard ^ bitboard.rotate_right(32)));
+    bitboard = bitboard ^ (MASK2 & (bitboard ^ bitboard.rotate_right(16)));
+    return bitboard ^ (MASK3 & (bitboard ^ bitboard.rotate_right(32)));
 }
 #[inline]
 pub fn rotate_pseudo_45_clockwise(bitboard: u64) -> u64 {
@@ -221,8 +225,8 @@ pub fn rotate_pseudo_45_clockwise(bitboard: u64) -> u64 {
     const MASK2: u64 = 0x3333333333333333; //0x3333333333333333
     const MASK3: u64 = 0x0f0f0f0f0f0f0f0f;
     let mut bitboard = bitboard ^ (MASK1 & (bitboard ^ bitboard.rotate_right(8)));
-    bitboard =         bitboard ^ (MASK2 & (bitboard ^ bitboard.rotate_right(16)));
-    return             bitboard ^ (MASK3 & (bitboard ^ bitboard.rotate_right(32)));
+    bitboard = bitboard ^ (MASK2 & (bitboard ^ bitboard.rotate_right(16)));
+    return bitboard ^ (MASK3 & (bitboard ^ bitboard.rotate_right(32)));
 }
 
 pub fn legal_patt_simd(p: u64, o: u64) -> u64 {
@@ -279,7 +283,11 @@ impl Board {
         }
     }
     pub fn board(&self, color: bool) -> u64 {
-        if color == BLACK { self.black } else { self.white }
+        if color == BLACK {
+            self.black
+        } else {
+            self.white
+        }
     }
     pub fn reverse(&mut self, rev: u64, pos: usize) {
         let pos = 1u64 << pos;
@@ -299,7 +307,6 @@ impl Board {
     }
     pub fn legal_patt(&self) -> u64 {
         legal_patt_simd(self.board(self.turn), self.board(!self.turn))
-
     }
     pub fn rev_patt(&self, pos: usize) -> u64 {
         unsafe { rev_patt_simd(self.board(self.turn), self.board(!self.turn), pos) }
@@ -321,13 +328,17 @@ impl fmt::Display for Board {
             for j in (0..8).rev() {
                 let check_bit = 1 << i * 8 + j;
                 out.push_str(
-                    match (self.black & check_bit, self.white & check_bit, legal_board & check_bit) {
+                    match (
+                        self.black & check_bit,
+                        self.white & check_bit,
+                        legal_board & check_bit,
+                    ) {
                         (0, 0, 0) => "□ ", // blank
                         (0, 0, _) => "◯ ", // puttable
                         (_, 0, _) => "⚫",
                         (0, _, _) => "⚪",
                         (_, _, _) => "X ",
-                    }
+                    },
                 );
             }
             out.push_str("\n");

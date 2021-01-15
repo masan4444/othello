@@ -24,11 +24,7 @@ fn rev_patt_bench(b: &mut test::Bencher) {
     let s = test::black_box(board::BIT_PATTERN::BLACK_INITIAL);
     let e = test::black_box(0x00000008100000ff);
     let o = test::black_box(board::BIT_PATTERN::WHITE_INITIAL);
-    b.iter(|| {
-        (s..e).fold(0, |a, b| a |
-            board::rev_patt(a, o, 26)
-        )
-    })
+    b.iter(|| (s..e).fold(0, |a, b| a | board::rev_patt(a, o, 26)))
 }
 // #[bench]
 // fn rev_patt_simd__bench(b: &mut test::Bencher) {
@@ -46,11 +42,7 @@ fn rev_patt_simd_bench(b: &mut test::Bencher) {
     let s = test::black_box(board::BIT_PATTERN::BLACK_INITIAL);
     let e = test::black_box(0x00000008100000ff);
     let o = test::black_box(board::BIT_PATTERN::WHITE_INITIAL);
-    b.iter(|| {
-        (s..e).fold(0, |a, b| a |
-            unsafe { board::rev_patt_simd(a, o, 26) }
-        )
-    })
+    b.iter(|| (s..e).fold(0, |a, b| a | unsafe { board::rev_patt_simd(a, o, 26) }))
 }
 #[bench]
 fn legal_patt_simd_bench(b: &mut test::Bencher) {
