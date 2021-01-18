@@ -1,10 +1,10 @@
 use super::board::*;
 use packed_simd::*;
 
-enum EvaMode {
-  count,
-  point,
-  compound,
+enum EvaluateMode {
+  Count,
+  Point,
+  Compound,
 }
 
 // pub fn search(p: u64, o: u64, pos: usize, index: usize) -> usize {
