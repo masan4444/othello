@@ -265,8 +265,8 @@ pub fn is_finished(p: u64, o: u64) -> bool {
     legal_patt_simd(p, o) == 0 && legal_patt_simd(o, p) == 0
 }
 
-const BLACK: bool = true;
-const WHITE: bool = false;
+pub const BLACK: bool = true;
+pub const WHITE: bool = false;
 
 #[derive(Debug)]
 pub struct Board {
@@ -333,11 +333,11 @@ impl fmt::Display for Board {
                         self.white & check_bit,
                         legal_board & check_bit,
                     ) {
-                        (0, 0, 0) => "□ ", // blank
-                        (0, 0, _) => "◯ ", // puttable
-                        (_, 0, _) => "⚫",
-                        (0, _, _) => "⚪",
-                        (_, _, _) => "X ",
+                        (0, 0, 0) => "- ", // blank
+                        (0, 0, _) => "x ", // puttable
+                        (_, 0, _) => "🔵",
+                        (0, _, _) => "⭕",
+                        (_, _, _) => "_  ",
                     },
                 );
             }
