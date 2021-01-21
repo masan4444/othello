@@ -1,4 +1,6 @@
 use super::board::{bitboard, Coordinate};
+use std::sync::{Arc, Mutex};
+use std::thread;
 
 // enum EvaluateMode {
 //   Count,
@@ -57,6 +59,58 @@ pub fn choose_pos(p: u64, o: u64, _index: usize) -> usize {
         legal_patt &= !(1u64 << pos);
     }
     best_pos
+}
+
+#[inline]
+pub fn choose_pos_concurrency(p: u64, o: u64, _index: usize) -> usize {
+    let mut legal_patt = bitboard::legal_patt_simd(p, o);
+    let mut alpha = isize::MIN + 1;
+
+    let mut eldest_work_finished = false;
+    let pos_and_scores = Arc::new(Mutex::new(Vec::<(usize, isize)>::new()));
+    let mut handles = vec![];
+
+    while legal_patt != 0 {
+        let pos = legal_patt.trailing_zeros() as usize;
+        let pos_and_scores_rc = Arc::clone(&pos_and_scores);
+
+        let handle = thread::spawn(move || {
+            println!("thread created");
+            let rev = bitboard::rev_patt_simd(p, o, pos);
+            let score = -_nega_alpha(
+                o ^ rev,
+                p ^ (1u64 << pos | rev),
+                11,
+                1,
+                isize::MIN + 1,
+                -alpha,
+            );
+            pos_and_scores_rc.lock().unwrap().push((pos, score));
+            println!("pos: {}({}), score: {}", Coordinate::from(pos), pos, score);
+        });
+
+        if !eldest_work_finished {
+            handle.join().unwrap();
+            alpha = pos_and_scores.lock().unwrap().iter().next().unwrap().1;
+            eldest_work_finished = true;
+        } else {
+            handles.push(handle);
+        }
+        legal_patt &= !(1u64 << pos);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    let mut pos_and_scores = pos_and_scores.lock().unwrap();
+    // for getting same result with non-concurrency
+    pos_and_scores.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+    pos_and_scores
+        .iter()
+        .max_by_key(|(_, score)| score)
+        .unwrap()
+        .0
 }
 
 #[inline]

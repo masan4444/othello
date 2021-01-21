@@ -15,12 +15,13 @@ use error::ApplicationError;
 
 #[cfg(test)]
 mod tests {
-    use super::board::bitboard::bitmask;
+    use super::board::bitboard::{self, bitmask};
 
     #[test]
     fn it_works() {
         let black: u64 = bitmask::BLACK_INITIAL;
         let white: u64 = bitmask::WHITE_INITIAL;
+
         assert_eq!((black | white).count_ones(), 4);
     }
 }
@@ -78,7 +79,7 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
             println!("{} passed!", string_from(board.turn()));
         } else {
             let pos = if mode == PlayMode::Computer && board.turn() == com_color {
-                com::choose_pos(
+                com::choose_pos_concurrency(
                     board.board(com_color),
                     board.board(!com_color),
                     board.get_count(),
