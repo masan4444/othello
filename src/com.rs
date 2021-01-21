@@ -23,7 +23,8 @@ pub unsafe fn choose_pos(p: u64, o: u64, index: usize) -> usize {
     let score = match index {
       _ => -nega_alpha(o ^ rev, p ^ (1u64 << pos | rev), 11, 1),
     };
-    println!("pos: {}, score: {}", pos, score);
+    let (coord_w, coord_h) = pos_to_coordinate(pos);
+    println!("pos: {}{}({}), score: {}", coord_w, coord_h, pos, score);
     if score > max_score {
       best_pos = pos;
       max_score = score;

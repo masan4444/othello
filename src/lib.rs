@@ -114,7 +114,7 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
                     io::stdout().flush().unwrap();
                     let mut coordinate = String::new();
                     io::stdin().read_line(&mut coordinate)?;
-                    pos = match coordinate_to_pos(&coordinate.trim()) {
+                    pos = match board::coordinate_to_pos(&coordinate.trim()) {
                         Some(pos) => {
                             if 1 << pos & board.legal_patt() == 0 {
                                 println!("you can't put there");
@@ -137,22 +137,4 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
         println!("{}", board);
     }
     Ok(())
-}
-
-pub fn coordinate_to_pos(cdn: &str) -> Option<usize> {
-    if cdn.len() != 2 {
-        return None;
-    }
-    let w = cdn.to_uppercase().chars().nth(0).unwrap() as isize - 'A' as isize;
-    let h = cdn.to_uppercase().chars().nth(1).unwrap() as isize - '1' as isize;
-    if h < 0 || h >= 8 || w < 0 || w >= 8 {
-        return None;
-    }
-    Some(63 - (w + h * 8) as usize)
-}
-
-#[allow(dead_code)]
-fn pos_to_coordinate(pos: usize) -> (char, usize) {
-    let w = ('H' as u8 - pos as u8 % 8) as char;
-    (w, 8 - pos / 8)
 }

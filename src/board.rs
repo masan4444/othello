@@ -180,6 +180,26 @@ pub fn check_projection(f: fn(u64) -> u64) {
     }
     println!("");
 }
+
+pub fn coordinate_to_pos(cdn: &str) -> Option<usize> {
+    if cdn.len() != 2 {
+        return None;
+    }
+    let cdn = cdn.to_uppercase();
+    let mut chars = cdn.chars();
+    let w = chars.next().unwrap() as isize - 'A' as isize;
+    let h = chars.next().unwrap() as isize - '1' as isize;
+    if h < 0 || h >= 8 || w < 0 || w >= 8 {
+        return None;
+    }
+    Some(63 - (w + h * 8) as usize)
+}
+
+pub fn pos_to_coordinate(pos: usize) -> (char, usize) {
+    let w = ('H' as u8 - pos as u8 % 8) as char;
+    (w, 8 - pos / 8)
+}
+
 /*
  63 62 61 60 59 58 57 56
  55 54 53 52 51 50 49 48
