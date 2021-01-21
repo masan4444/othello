@@ -22,22 +22,22 @@ use reversi::*;
 #[bench]
 fn first_set_bench(b: &mut test::Bencher) {
     use packed_simd::*;
-    let s = test::black_box(board::bit_pattern::BLACK_INITIAL);
+    let s = test::black_box(board::bitmask::BLACK_INITIAL);
     let e = test::black_box(0x00000008100000ff);
     b.iter(|| (s..e).fold(0, |a, b| a | board::first_set(u64x4::splat(a)).extract(0)))
 }
 #[bench]
 fn rev_patt_bench(b: &mut test::Bencher) {
-    let s = test::black_box(board::bit_pattern::BLACK_INITIAL);
+    let s = test::black_box(board::bitmask::BLACK_INITIAL);
     let e = test::black_box(0x00000008100000ff);
-    let o = test::black_box(board::bit_pattern::WHITE_INITIAL);
+    let o = test::black_box(board::bitmask::WHITE_INITIAL);
     b.iter(|| (s..e).fold(0, |a, b| a | board::rev_patt(a, o, 26)))
 }
 // #[bench]
 // fn rev_patt_simd__bench(b: &mut test::Bencher) {
-//     let s = test::black_box(board::bit_pattern::BLACK_INITIAL);
+//     let s = test::black_box(board::bitmask::BLACK_INITIAL);
 //     let e = test::black_box(0x00000008100000ff);
-//     let o = test::black_box(board::bit_pattern::WHITE_INITIAL);
+//     let o = test::black_box(board::bitmask::WHITE_INITIAL);
 //     b.iter(|| {
 //         (s..e).fold(0, |a, b| a |
 //             unsafe { board::rev_patt_simd_(a, o, 26) }
@@ -46,15 +46,15 @@ fn rev_patt_bench(b: &mut test::Bencher) {
 // }
 #[bench]
 fn rev_patt_simd_bench(b: &mut test::Bencher) {
-    let s = test::black_box(board::bit_pattern::BLACK_INITIAL);
+    let s = test::black_box(board::bitmask::BLACK_INITIAL);
     let e = test::black_box(0x00000008100000ff);
-    let o = test::black_box(board::bit_pattern::WHITE_INITIAL);
+    let o = test::black_box(board::bitmask::WHITE_INITIAL);
     b.iter(|| (s..e).fold(0, |a, b| a | board::rev_patt_simd(a, o, 26)))
 }
 #[bench]
 fn legal_patt_simd_bench(b: &mut test::Bencher) {
-    let s = test::black_box(board::bit_pattern::BLACK_INITIAL);
-    let e = test::black_box(board::bit_pattern::WHITE_INITIAL);
+    let s = test::black_box(board::bitmask::BLACK_INITIAL);
+    let e = test::black_box(board::bitmask::WHITE_INITIAL);
     b.iter(|| {
         board::legal_patt_simd(s, e);
     })

@@ -19,8 +19,8 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let black: u64 = board::bit_pattern::BLACK_INITIAL;
-        let white: u64 = board::bit_pattern::WHITE_INITIAL;
+        let black: u64 = board::bitmask::BLACK_INITIAL;
+        let white: u64 = board::bitmask::WHITE_INITIAL;
         assert_eq!((black | white).count_ones(), 4);
     }
 }

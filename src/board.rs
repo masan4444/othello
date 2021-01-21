@@ -18,7 +18,7 @@ use std::fmt;
 ---------------------------
 */
 
-pub mod bit_pattern {
+pub mod bitmask {
     pub const BLACK_INITIAL: u64 = 0x0000000810000000;
     pub const WHITE_INITIAL: u64 = 0x0000001008000000;
 
@@ -62,25 +62,25 @@ pub fn disp_bitboardx4(bitboards: u64x4) {
 }
 
 const HIGH_ORDER_MASKS: [u64; 4] = [
-    bit_pattern::LOWER_MASK,
-    bit_pattern::RIGHT_MASK,
-    bit_pattern::LOWER_LEFT_MASK,
-    bit_pattern::LOWER_RIGHT_MASK,
+    bitmask::LOWER_MASK,
+    bitmask::RIGHT_MASK,
+    bitmask::LOWER_LEFT_MASK,
+    bitmask::LOWER_RIGHT_MASK,
 ];
 const LOW_ORDER_MASKS: [u64; 4] = [
-    bit_pattern::UPPER_MASK,
-    bit_pattern::LEFT_MASK,
-    bit_pattern::UPPER_RIGHT_MASK,
-    bit_pattern::UPPER_LEFT_MASK,
+    bitmask::UPPER_MASK,
+    bitmask::LEFT_MASK,
+    bitmask::UPPER_RIGHT_MASK,
+    bitmask::UPPER_LEFT_MASK,
 ];
 // #[inline]
 pub fn rev_patt(p: u64, o: u64, pos: usize) -> u64 {
     let mut reversed = 0u64;
-    let o_side_masked = o & bit_pattern::SIDE_MASK;
+    let o_side_masked = o & bitmask::SIDE_MASK;
     for (i, &mask) in HIGH_ORDER_MASKS.iter().enumerate() {
         let o = if i == 0 { o } else { o_side_masked };
         let mask = mask >> 63 - pos;
-        let outflank = (bit_pattern::UPPER_LEFT_CORNER >> (!o & mask).leading_zeros()) & p;
+        let outflank = (bitmask::UPPER_LEFT_CORNER >> (!o & mask).leading_zeros()) & p;
         reversed |= ((-(outflank as i64) as u64) << 1) & mask;
     }
     for (i, &mask) in LOW_ORDER_MASKS.iter().enumerate() {
@@ -114,24 +114,24 @@ pub fn rev_patt_simd(p: u64, o: u64, pos: usize) -> u64 {
     let p = u64x4::splat(p);
     let o = u64x4::splat(o)
         & u64x4::new(
-            bit_pattern::ALL_MASK,
-            bit_pattern::SIDE_MASK,
-            bit_pattern::SIDE_MASK,
-            bit_pattern::SIDE_MASK,
+            bitmask::ALL_MASK,
+            bitmask::SIDE_MASK,
+            bitmask::SIDE_MASK,
+            bitmask::SIDE_MASK,
         );
     let mask = u64x4::new(
-        bit_pattern::LOWER_MASK,
-        bit_pattern::RIGHT_MASK,
-        bit_pattern::LOWER_LEFT_MASK,
-        bit_pattern::LOWER_RIGHT_MASK,
+        bitmask::LOWER_MASK,
+        bitmask::RIGHT_MASK,
+        bitmask::LOWER_LEFT_MASK,
+        bitmask::LOWER_RIGHT_MASK,
     ) >> (63 - pos) as u32;
     let outflank = first_set(!o & mask) & p;
     let mut reversed = u64x4::from_cast(-i64x4::from_cast(outflank) << 1) & mask;
     let mask = u64x4::new(
-        bit_pattern::UPPER_MASK,
-        bit_pattern::LEFT_MASK,
-        bit_pattern::UPPER_RIGHT_MASK,
-        bit_pattern::UPPER_LEFT_MASK,
+        bitmask::UPPER_MASK,
+        bitmask::LEFT_MASK,
+        bitmask::UPPER_RIGHT_MASK,
+        bitmask::UPPER_LEFT_MASK,
     ) << pos as u32;
     let outflank = mask & ((o | !mask) + 1) & p;
     reversed |= (outflank - noeqzero(outflank)) & mask;
@@ -233,10 +233,10 @@ pub fn rotate_pseudo_45_clockwise(bitboard: u64) -> u64 {
 pub fn legal_patt_simd(p: u64, o: u64) -> u64 {
     let shift1 = u64x4::new(1, 7, 9, 8);
     let mask = u64x4::new(
-        bit_pattern::SIDE_MASK,
-        bit_pattern::SIDE_MASK,
-        bit_pattern::SIDE_MASK,
-        bit_pattern::ALL_MASK,
+        bitmask::SIDE_MASK,
+        bitmask::SIDE_MASK,
+        bitmask::SIDE_MASK,
+        bitmask::ALL_MASK,
     );
     let v_player = u64x4::splat(p);
     let masked_op = u64x4::splat(o) & mask;
@@ -279,8 +279,8 @@ pub struct Board {
 impl Board {
     pub fn new() -> Self {
         Self {
-            black: bit_pattern::BLACK_INITIAL,
-            white: bit_pattern::WHITE_INITIAL,
+            black: bitmask::BLACK_INITIAL,
+            white: bitmask::WHITE_INITIAL,
             turn: BLACK,
             count: 0,
         }
