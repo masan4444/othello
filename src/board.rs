@@ -92,7 +92,7 @@ pub fn rev_patt(p: u64, o: u64, pos: usize) -> u64 {
     reversed
 }
 #[inline]
-pub unsafe fn first_set(bits: u64x4) -> u64x4 {
+pub fn first_set(bits: u64x4) -> u64x4 {
     let mut bits = bits | (bits >> 1);
     bits = bits | (bits >> 2);
     bits = bits | (bits >> 4);
@@ -103,14 +103,14 @@ pub unsafe fn first_set(bits: u64x4) -> u64x4 {
     bits & !lowers
 }
 #[inline]
-pub unsafe fn noeqzero(bits: u64x4) -> u64x4 {
+pub fn noeqzero(bits: u64x4) -> u64x4 {
     let zero = u64x4::splat(0);
     let mask = bits.ne(zero);
     let one = u64x4::splat(1);
     one & u64x4::from_cast(mask)
 }
 #[inline]
-pub unsafe fn rev_patt_simd(p: u64, o: u64, pos: usize) -> u64 {
+pub fn rev_patt_simd(p: u64, o: u64, pos: usize) -> u64 {
     let p = u64x4::splat(p);
     let o = u64x4::splat(o)
         & u64x4::new(
@@ -179,25 +179,6 @@ pub fn check_projection(f: fn(u64) -> u64) {
         println!("");
     }
     println!("");
-}
-
-pub fn coordinate_to_pos(cdn: &str) -> Option<usize> {
-    if cdn.len() != 2 {
-        return None;
-    }
-    let cdn = cdn.to_uppercase();
-    let mut chars = cdn.chars();
-    let w = chars.next().unwrap() as isize - 'A' as isize;
-    let h = chars.next().unwrap() as isize - '1' as isize;
-    if h < 0 || h >= 8 || w < 0 || w >= 8 {
-        return None;
-    }
-    Some(63 - (w + h * 8) as usize)
-}
-
-pub fn pos_to_coordinate(pos: usize) -> (char, usize) {
-    let w = ('H' as u8 - pos as u8 % 8) as char;
-    (w, 8 - pos / 8)
 }
 
 /*
@@ -290,9 +271,10 @@ pub const WHITE: bool = false;
 
 #[derive(Debug)]
 pub struct Board {
-    pub black: u64,
-    pub white: u64,
-    pub turn: bool,
+    black: u64,
+    white: u64,
+    turn: bool,
+    count: usize,
 }
 impl Board {
     pub fn new() -> Self {
@@ -300,7 +282,14 @@ impl Board {
             black: bit_pattern::BLACK_INITIAL,
             white: bit_pattern::WHITE_INITIAL,
             turn: BLACK,
+            count: 0,
         }
+    }
+    pub fn turn(&self) -> bool {
+        self.turn
+    }
+    pub fn get_count(&self) -> usize {
+        self.count
     }
     pub fn board(&self, color: bool) -> u64 {
         if color == BLACK {
@@ -329,7 +318,12 @@ impl Board {
         legal_patt_simd(self.board(self.turn), self.board(!self.turn))
     }
     pub fn rev_patt(&self, pos: usize) -> u64 {
-        unsafe { rev_patt_simd(self.board(self.turn), self.board(!self.turn), pos) }
+        rev_patt_simd(self.board(self.turn), self.board(!self.turn), pos)
+    }
+    pub fn next(&mut self) -> usize {
+        self.turn = !self.turn;
+        self.count += 1;
+        self.count
     }
     pub fn result(&self) -> (u32, u32) {
         (self.black.count_ones(), self.white.count_ones())
@@ -365,5 +359,51 @@ impl fmt::Display for Board {
         }
         out.push_str("↑ \nH\n");
         write!(f, "{}", out)
+    }
+}
+
+use std::convert::{From, TryFrom};
+
+pub struct Coordinate {
+    w: char,
+    h: char,
+}
+impl Coordinate {
+    fn try_new(w: char, h: char) -> Result<Self, &'static str> {
+        let (_w, _h) = Self::char_to_index(w, h);
+        if _h < 0 || _h >= 8 || _w < 0 || _w >= 8 {
+            return Err("out of range");
+        };
+        Ok(Coordinate { w, h })
+    }
+    pub fn get_pos(&self) -> usize {
+        let (w, h) = Self::char_to_index(self.w, self.h);
+        63 - (w + h * 8) as usize
+    }
+    pub fn char_to_index(w: char, h: char) -> (isize, isize) {
+        (w as isize - 'A' as isize, h as isize - '1' as isize)
+    }
+}
+impl fmt::Display for Coordinate {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}{}", self.w, self.h)
+    }
+}
+impl From<usize> for Coordinate {
+    fn from(pos: usize) -> Self {
+        let w = ('H' as u8 - pos as u8 % 8) as char;
+        let h = ('8' as u8 - pos as u8 / 8) as char;
+        Coordinate { w, h }
+    }
+}
+impl TryFrom<&str> for Coordinate {
+    type Error = &'static str;
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        if s.len() != 2 {
+            return Err("invalid input");
+        }
+        let s = s.to_uppercase();
+        let mut chars = s.chars();
+        Coordinate::try_new(chars.next().unwrap(), chars.next().unwrap())
     }
 }

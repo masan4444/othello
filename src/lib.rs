@@ -4,6 +4,8 @@ pub mod board;
 pub mod com;
 pub mod error;
 
+use board::Coordinate;
+use std::convert::{From, TryFrom};
 use std::error::Error;
 use std::fmt;
 use std::io;
@@ -57,8 +59,7 @@ pub fn set_play_mode() -> Result<PlayMode, Box<dyn Error>> {
 
 pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
     let mut board = board::Board::new();
-    let mut index = 0;
-    let mut com_color = board::BLACK;
+    let com_color = board::WHITE;
     println!("{}", board);
 
     loop {
@@ -69,72 +70,53 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
             if black_count == white_count {
                 println!("draw!");
             } else {
-                println!(
-                    "{} wins!",
-                    if black_count > white_count {
-                        "BLACK"
-                    } else {
-                        "WHITE"
-                    }
-                );
+                let winner = black_count > white_count;
+                println!("{} wins!", string_from(winner));
             }
             break;
         } else if board.is_pass() {
-            println!(
-                "{} passed!",
-                if board.turn {
-                    "⚫ BLACK ⚫"
-                } else {
-                    "⚪ WHITE ⚪"
-                }
-            );
+            println!("{} passed!", string_from(board.turn()));
         } else {
-            if mode == PlayMode::Computer && index == 0 {
-                print!("Select your color > ");
-                io::stdout().flush().unwrap();
-                com_color = board::WHITE;
-                println!("");
-            }
-            let pos: usize;
-            if mode == PlayMode::Computer && board.turn == com_color {
-                pos = unsafe {
-                    com::choose_pos(board.board(com_color), board.board(!com_color), index)
-                };
+            let pos = if mode == PlayMode::Computer && board.turn() == com_color {
+                com::choose_pos(
+                    board.board(com_color),
+                    board.board(!com_color),
+                    board.get_count(),
+                )
             } else {
-                println!(
-                    "You are {}",
-                    if board.turn {
-                        "⚫ BLACK ⚫"
-                    } else {
-                        "⚪ WHITE ⚪"
-                    }
-                );
+                println!("You are {}", string_from(board.turn()));
+                let legal_patt = board.legal_patt();
                 loop {
                     print!("Enter coordinate (example: \"c4\") > ");
                     io::stdout().flush().unwrap();
                     let mut coordinate = String::new();
                     io::stdin().read_line(&mut coordinate)?;
-                    pos = match board::coordinate_to_pos(&coordinate.trim()) {
-                        Some(pos) => {
-                            if 1 << pos & board.legal_patt() == 0 {
-                                println!("you can't put there");
-                                continue;
-                            }
-                            pos
-                        }
-                        None => {
-                            println!("invalid input");
-                            continue;
-                        }
+                    match Coordinate::try_from(coordinate.trim()) {
+                        Ok(cdn) if 1 << cdn.get_pos() & legal_patt != 0 => break cdn.get_pos(),
+                        Ok(_) => println!("you can't put there"),
+                        Err(e) => println!("Error: {}", e),
                     };
-                    break;
                 }
-            }
+            };
+            println!("");
+            println!(
+                "{} chose: {}",
+                string_from(board.turn()),
+                Coordinate::from(pos)
+            );
+            println!("");
             board.reverse(board.rev_patt(pos), pos);
         }
-        board.turn = !board.turn;
-        index += 1;
+        board.next();
         println!("{}", board);
     }
     Ok(())
+}
+
+fn string_from(turn: bool) -> String {
+    if turn {
+        "BLACK".to_string()
+    } else {
+        "WHITE".to_string()
+    }
 }
