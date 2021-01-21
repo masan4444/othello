@@ -4,7 +4,7 @@ pub mod board;
 pub mod com;
 pub mod error;
 
-use board::Coordinate;
+use board::{Board, Coordinate};
 use std::convert::{From, TryFrom};
 use std::error::Error;
 use std::fmt;
@@ -15,12 +15,12 @@ use error::ApplicationError;
 
 #[cfg(test)]
 mod tests {
-    use super::board;
+    use super::board::bitboard::bitmask;
 
     #[test]
     fn it_works() {
-        let black: u64 = board::bitmask::BLACK_INITIAL;
-        let white: u64 = board::bitmask::WHITE_INITIAL;
+        let black: u64 = bitmask::BLACK_INITIAL;
+        let white: u64 = bitmask::WHITE_INITIAL;
         assert_eq!((black | white).count_ones(), 4);
     }
 }
@@ -58,7 +58,7 @@ pub fn set_play_mode() -> Result<PlayMode, Box<dyn Error>> {
 }
 
 pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
-    let mut board = board::Board::new();
+    let mut board = Board::new();
     let com_color = board::WHITE;
     println!("{}", board);
 

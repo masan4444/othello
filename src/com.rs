@@ -1,4 +1,4 @@
-use super::board::{self, Coordinate};
+use super::board::{bitboard, Coordinate};
 
 // enum EvaluateMode {
 //   Count,
@@ -15,10 +15,10 @@ use super::board::{self, Coordinate};
 pub fn choose_pos(p: u64, o: u64, index: usize) -> usize {
   let mut best_pos = 0;
   let mut max_score = isize::MIN;
-  let mut legal_patt = board::legal_patt_simd(p, o);
+  let mut legal_patt = bitboard::legal_patt_simd(p, o);
   while legal_patt != 0 {
     let pos = legal_patt.trailing_zeros() as usize;
-    let rev = board::rev_patt_simd(p, o, pos);
+    let rev = bitboard::rev_patt_simd(p, o, pos);
     let score = match index {
       _ => -nega_alpha(o ^ rev, p ^ (1u64 << pos | rev), 11, 1),
     };
@@ -41,11 +41,11 @@ pub fn evaluate(p: u64, o: u64, _legal_patt: u64, mode: isize) -> isize {
 }
 
 pub fn _nega_alpha(p: u64, o: u64, depth: usize, mode: isize, alpha: isize, beta: isize) -> isize {
-  let mut lagal_patt = board::legal_patt_simd(p, o);
+  let mut lagal_patt = bitboard::legal_patt_simd(p, o);
   match (depth, lagal_patt) {
     (0, _) => return evaluate(p, o, lagal_patt, mode), // evaluate
     (_, 0) => {
-      if board::legal_patt_simd(o, p) == 0 {
+      if bitboard::legal_patt_simd(o, p) == 0 {
         return evaluate(p, o, lagal_patt, mode); // finish
       } else {
         return -_nega_alpha(o, p, depth - 1, mode, -beta, -alpha); // pass
@@ -56,7 +56,7 @@ pub fn _nega_alpha(p: u64, o: u64, depth: usize, mode: isize, alpha: isize, beta
   let mut alpha = alpha;
   while lagal_patt != 0 {
     let pos = lagal_patt.trailing_zeros() as usize;
-    let rev = board::rev_patt_simd(p, o, pos);
+    let rev = bitboard::rev_patt_simd(p, o, pos);
     let pos = 1u64 << pos;
     let score = -_nega_alpha(o ^ rev, p ^ (pos | rev), depth - 1, mode, -beta, -alpha);
     alpha = if score > alpha { score } else { alpha };
