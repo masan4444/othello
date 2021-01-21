@@ -63,3 +63,12 @@ fn legal_patt_simd_bench(b: &mut test::Bencher) {
         bitboard::legal_patt_simd(s, e);
     })
 }
+#[bench]
+fn choose_pos_bench(b: &mut test::Bencher) {
+    use reversi::com;
+    let s = test::black_box(bitmask::BLACK_INITIAL);
+    let e = test::black_box(bitmask::WHITE_INITIAL);
+    b.iter(|| {
+        com::choose_pos(s, e, 0);
+    })
+}

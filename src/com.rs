@@ -11,21 +11,48 @@ use super::board::{bitboard, Coordinate};
 //   0
 // }
 
+// #[inline]
+// pub fn choose_pos_old(p: u64, o: u64, index: usize) -> usize {
+//     let mut best_pos = 0;
+//     let mut max_score = isize::MIN;
+//     let mut legal_patt = bitboard::legal_patt_simd(p, o);
+//     while legal_patt != 0 {
+//         let pos = legal_patt.trailing_zeros() as usize;
+//         let rev = bitboard::rev_patt_simd(p, o, pos);
+//         let score = match index {
+//             _ => -nega_alpha(o ^ rev, p ^ (1u64 << pos | rev), 11, 1),
+//         };
+//         println!("pos: {}({}), score: {}", Coordinate::from(pos), pos, score);
+//         if score > max_score {
+//             best_pos = pos;
+//             max_score = score;
+//         }
+//         legal_patt &= !(1u64 << pos);
+//     }
+//     best_pos
+// }
+
 #[inline]
-pub fn choose_pos(p: u64, o: u64, index: usize) -> usize {
+pub fn choose_pos(p: u64, o: u64, _index: usize) -> usize {
     let mut best_pos = 0;
-    let mut max_score = isize::MIN;
     let mut legal_patt = bitboard::legal_patt_simd(p, o);
+    let mut alpha = isize::MIN + 1;
+
     while legal_patt != 0 {
         let pos = legal_patt.trailing_zeros() as usize;
         let rev = bitboard::rev_patt_simd(p, o, pos);
-        let score = match index {
-            _ => -nega_alpha(o ^ rev, p ^ (1u64 << pos | rev), 11, 1),
-        };
+        let score = -_nega_alpha(
+            o ^ rev,
+            p ^ (1u64 << pos | rev),
+            11,
+            1,
+            isize::MIN + 1,
+            -alpha,
+        );
         println!("pos: {}({}), score: {}", Coordinate::from(pos), pos, score);
-        if score > max_score {
+        if score > alpha {
             best_pos = pos;
-            max_score = score;
+            alpha = score;
         }
         legal_patt &= !(1u64 << pos);
     }
@@ -68,7 +95,7 @@ pub fn _nega_alpha(p: u64, o: u64, depth: usize, mode: isize, alpha: isize, beta
     alpha
 }
 
-#[inline]
-pub fn nega_alpha(p: u64, o: u64, depth: usize, mode: isize) -> isize {
-    return _nega_alpha(p, o, depth, mode, isize::MIN + 1, isize::MAX);
-}
+// #[inline]
+// pub fn nega_alpha(p: u64, o: u64, depth: usize, mode: isize) -> isize {
+//     return _nega_alpha(p, o, depth, mode, isize::MIN + 1, isize::MAX);
+// }
