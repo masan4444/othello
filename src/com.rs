@@ -11,27 +11,6 @@ use super::board::{bitboard, Coordinate};
 //   0
 // }
 
-// #[inline]
-// pub fn choose_pos_old(p: u64, o: u64, index: usize) -> usize {
-//     let mut best_pos = 0;
-//     let mut max_score = isize::MIN;
-//     let mut legal_patt = bitboard::legal_patt_simd(p, o);
-//     while legal_patt != 0 {
-//         let pos = legal_patt.trailing_zeros() as usize;
-//         let rev = bitboard::rev_patt_simd(p, o, pos);
-//         let score = match index {
-//             _ => -nega_alpha(o ^ rev, p ^ (1u64 << pos | rev), 11, 1),
-//         };
-//         println!("pos: {}({}), score: {}", Coordinate::from(pos), pos, score);
-//         if score > max_score {
-//             best_pos = pos;
-//             max_score = score;
-//         }
-//         legal_patt &= !(1u64 << pos);
-//     }
-//     best_pos
-// }
-
 #[inline]
 pub fn choose_pos(p: u64, o: u64, _index: usize) -> usize {
     let mut best_pos = 0;
@@ -41,7 +20,7 @@ pub fn choose_pos(p: u64, o: u64, _index: usize) -> usize {
     while legal_patt != 0 {
         let pos = legal_patt.trailing_zeros() as usize;
         let rev = bitboard::rev_patt_simd(p, o, pos);
-        let score = -_nega_alpha(
+        let score = -nega_alpha(
             o ^ rev,
             p ^ (1u64 << pos | rev),
             11,
@@ -67,7 +46,7 @@ pub fn evaluate(p: u64, o: u64, _legal_patt: u64, mode: isize) -> isize {
     }
 }
 
-pub fn _nega_alpha(p: u64, o: u64, depth: usize, mode: isize, alpha: isize, beta: isize) -> isize {
+pub fn nega_alpha(p: u64, o: u64, depth: usize, mode: isize, alpha: isize, beta: isize) -> isize {
     let mut legal_patt = bitboard::legal_patt_simd(p, o);
     match (depth, legal_patt) {
         (0, _) => return evaluate(p, o, legal_patt, mode), // evaluate
@@ -75,7 +54,7 @@ pub fn _nega_alpha(p: u64, o: u64, depth: usize, mode: isize, alpha: isize, beta
             if bitboard::legal_patt_simd(o, p) == 0 {
                 return evaluate(p, o, legal_patt, mode); // finish
             } else {
-                return -_nega_alpha(o, p, depth - 1, mode, -beta, -alpha); // pass
+                return -nega_alpha(o, p, depth - 1, mode, -beta, -alpha); // pass
             }
         }
         (_, _) => (),
@@ -85,7 +64,7 @@ pub fn _nega_alpha(p: u64, o: u64, depth: usize, mode: isize, alpha: isize, beta
         let pos = legal_patt.trailing_zeros() as usize;
         let rev = bitboard::rev_patt_simd(p, o, pos);
         let pos = 1u64 << pos;
-        let score = -_nega_alpha(o ^ rev, p ^ (pos | rev), depth - 1, mode, -beta, -alpha);
+        let score = -nega_alpha(o ^ rev, p ^ (pos | rev), depth - 1, mode, -beta, -alpha);
         alpha = if score > alpha { score } else { alpha };
         if alpha >= beta {
             return alpha;
@@ -94,8 +73,3 @@ pub fn _nega_alpha(p: u64, o: u64, depth: usize, mode: isize, alpha: isize, beta
     }
     alpha
 }
-
-// #[inline]
-// pub fn nega_alpha(p: u64, o: u64, depth: usize, mode: isize) -> isize {
-//     return _nega_alpha(p, o, depth, mode, isize::MIN + 1, isize::MAX);
-// }
