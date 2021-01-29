@@ -44,15 +44,15 @@ pub fn set_play_mode() -> Result<PlayMode, Box<dyn Error>> {
     println!("Please choose play mode");
     println!("Play with friend > input 1");
     println!("Play with computer > input 2");
-    print!("mode > ");
-    io::stdout().flush()?;
 
-    let mut mode = String::new();
-    io::stdin().read_line(&mut mode)?;
-    let mode = match mode.trim().parse()? {
-        1 => PlayMode::Frind,
-        2 => PlayMode::Computer,
-        _ => Err(ApplicationError::InvalidModeError)?,
+    let mode = loop {
+        print!("mode > ");
+        match read_line()?.parse() {
+            Ok(1) => break PlayMode::Frind,
+            Ok(2) => break PlayMode::Computer,
+            Ok(_) => eprintln!("ApplicationError: {}", ApplicationError::InvalidModeError),
+            Err(e) => eprintln!("Error: {}", e),
+        }
     };
     Ok(mode)
 }
@@ -87,10 +87,8 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
                 let legal_patt = board.legal_patt();
                 loop {
                     print!("Enter coordinate (example: \"c4\") > ");
-                    io::stdout().flush().unwrap();
-                    let mut coordinate = String::new();
-                    io::stdin().read_line(&mut coordinate)?;
-                    match Coordinate::try_from(coordinate.trim()) {
+                    let coordinate = read_line()?;
+                    match Coordinate::try_from(&coordinate[..]) {
                         Ok(cdn) if 1 << cdn.get_pos() & legal_patt != 0 => break cdn.get_pos(),
                         Ok(_) => println!("you can't put there"),
                         Err(e) => println!("Error: {}", e),
@@ -108,9 +106,9 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn read() -> io::Result<String> {
-    io::stdout().flush().unwrap();
+fn read_line() -> io::Result<String> {
+    io::stdout().flush()?;
     let mut s = String::new();
     io::stdin().read_line(&mut s)?;
-    Ok(s)
+    Ok(s.trim().to_string())
 }
