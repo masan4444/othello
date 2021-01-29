@@ -4,7 +4,7 @@ pub mod board;
 pub mod com;
 pub mod error;
 
-use board::{Board, Coordinate};
+use board::{Board, Color, Coordinate};
 use std::convert::{From, TryFrom};
 use std::error::Error;
 use std::fmt;
@@ -59,7 +59,7 @@ pub fn set_play_mode() -> Result<PlayMode, Box<dyn Error>> {
 
 pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
     let mut board = Board::new();
-    let com_color = board::WHITE;
+    let com_color = Color::white();
     println!("{}", board);
 
     loop {
@@ -70,12 +70,11 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
             if black_count == white_count {
                 println!("draw!");
             } else {
-                let winner = black_count > white_count;
-                println!("{} wins!", string_from(winner));
+                println!("{:?} wins!", Color::from(black_count > white_count));
             }
             break;
         } else if board.is_pass() {
-            println!("{} passed!", string_from(board.turn()));
+            println!("{:?} passed!", board.turn());
         } else {
             let pos = if mode == PlayMode::Computer && board.turn() == com_color {
                 com::choose_pos(
@@ -84,7 +83,7 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
                     board.get_count(),
                 )
             } else {
-                println!("You are {}", string_from(board.turn()));
+                println!("You are {:?}", board.turn());
                 let legal_patt = board.legal_patt();
                 loop {
                     print!("Enter coordinate (example: \"c4\") > ");
@@ -99,11 +98,7 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
                 }
             };
             println!("");
-            println!(
-                "{} chose: {}",
-                string_from(board.turn()),
-                Coordinate::from(pos)
-            );
+            println!("{:?} chose: {}", board.turn(), Coordinate::from(pos));
             println!("");
             board.reverse(board.rev_patt(pos), pos);
         }
@@ -113,10 +108,9 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn string_from(turn: bool) -> String {
-    if turn {
-        "BLACK".to_string()
-    } else {
-        "WHITE".to_string()
-    }
+fn read() -> io::Result<String> {
+    io::stdout().flush().unwrap();
+    let mut s = String::new();
+    io::stdin().read_line(&mut s)?;
+    Ok(s)
 }
