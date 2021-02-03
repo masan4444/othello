@@ -3,14 +3,11 @@ pub mod bitboard;
 use bitboard::bitmask;
 use std::fmt;
 
-pub const BLACK: bool = true;
-pub const WHITE: bool = false;
-
 #[derive(Debug)]
 pub struct Board {
     black: u64,
     white: u64,
-    turn: bool,
+    turn: Color,
     count: usize,
 }
 impl Board {
@@ -18,18 +15,18 @@ impl Board {
         Self {
             black: bitmask::BLACK_INITIAL,
             white: bitmask::WHITE_INITIAL,
-            turn: BLACK,
+            turn: Color::black(),
             count: 0,
         }
     }
-    pub fn turn(&self) -> bool {
+    pub fn turn(&self) -> Color {
         self.turn
     }
     pub fn get_count(&self) -> usize {
         self.count
     }
-    pub fn board(&self, color: bool) -> u64 {
-        if color == BLACK {
+    pub fn board(&self, color: Color) -> u64 {
+        if color.is_black() {
             self.black
         } else {
             self.white
@@ -37,7 +34,7 @@ impl Board {
     }
     pub fn reverse(&mut self, rev: u64, pos: usize) {
         let pos = 1u64 << pos;
-        if self.turn == BLACK {
+        if self.turn.is_black() {
             self.black ^= pos | rev;
             self.white ^= rev;
         } else {
@@ -99,7 +96,6 @@ impl fmt::Display for Board {
     }
 }
 
-
 use std::convert::{From, TryFrom};
 
 pub struct Coordinate {
@@ -143,5 +139,31 @@ impl TryFrom<&str> for Coordinate {
         let s = s.to_uppercase();
         let mut chars = s.chars();
         Coordinate::try_new(chars.next().unwrap(), chars.next().unwrap())
+    }
+}
+
+extern crate derive_more;
+use derive_more::{From, Not};
+
+#[derive(Copy, Clone, PartialEq, From, Not)]
+pub struct Color(bool);
+
+pub const BLACK: bool = true;
+pub const WHITE: bool = false;
+
+impl Color {
+    pub fn black() -> Self {
+        Self(BLACK)
+    }
+    pub fn white() -> Self {
+        Self(WHITE)
+    }
+    pub fn is_black(&self) -> bool {
+        self == &Self::black()
+    }
+}
+impl fmt::Debug for Color {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", if self.is_black() { "BLACK" } else { "WHITE" })
     }
 }

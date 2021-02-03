@@ -138,28 +138,28 @@ pub fn rev_patt_simd(p: u64, o: u64, pos: usize) -> u64 {
 }
 #[inline]
 pub fn legal_patt_simd(p: u64, o: u64) -> u64 {
-    let shift1 = u64x4::new(1, 7, 9, 8);
-    let mask = u64x4::new(
+    const SHIFT1: Simd<[u64; 4]> = u64x4::new(1, 7, 9, 8);
+    const SHIFT2: Simd<[u64; 4]> = u64x4::new(2, 14, 18, 16);
+    const MASK: Simd<[u64; 4]> = u64x4::new(
         bitmask::SIDE_MASK,
         bitmask::SIDE_MASK,
         bitmask::SIDE_MASK,
         bitmask::ALL_MASK,
     );
     let v_player = u64x4::splat(p);
-    let masked_op = u64x4::splat(o) & mask;
-    let mut flip_l = masked_op & (v_player << shift1);
-    let mut flip_r = masked_op & (v_player >> shift1);
-    flip_l |= masked_op & (flip_l << shift1);
-    flip_r |= masked_op & (flip_r >> shift1);
-    let pre_l = masked_op & (masked_op << shift1);
-    let pre_r = pre_l >> shift1;
-    let shift2 = shift1 + shift1;
-    flip_l |= pre_l & (flip_l << shift2);
-    flip_r |= pre_r & (flip_r >> shift2);
-    flip_l |= pre_l & (flip_l << shift2);
-    flip_r |= pre_r & (flip_r >> shift2);
-    let mut res = flip_l << shift1;
-    res |= flip_r >> shift1;
+    let masked_op = u64x4::splat(o) & MASK;
+    let mut flip_l = masked_op & (v_player << SHIFT1);
+    let mut flip_r = masked_op & (v_player >> SHIFT1);
+    flip_l |= masked_op & (flip_l << SHIFT1);
+    flip_r |= masked_op & (flip_r >> SHIFT1);
+    let pre_l = masked_op & (masked_op << SHIFT1);
+    let pre_r = pre_l >> SHIFT1;
+    flip_l |= pre_l & (flip_l << SHIFT2);
+    flip_r |= pre_r & (flip_r >> SHIFT2);
+    flip_l |= pre_l & (flip_l << SHIFT2);
+    flip_r |= pre_r & (flip_r >> SHIFT2);
+    let mut res = flip_l << SHIFT1;
+    res |= flip_r >> SHIFT1;
     res &= u64x4::splat(!(p | o));
     return res.or();
 }
