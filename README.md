@@ -4,11 +4,11 @@ This is reversi game wriiten in rust.
 ```
 git clone https://github.com/masan4444/reversi.git
 cd reversi
-RUSTFLAGS='-C target-cpu=native' cargo +nightly build
+RUSTFLAGS='-C target-cpu=native' cargo +nightly build --release
 ```
 ### Run
 ```
-RUSTFLAGS='-C target-cpu=native' cargo +nightly run
+RUSTFLAGS='-C target-cpu=native' cargo +nightly run --release
 ```
 ### Test
 ```
