@@ -15,7 +15,7 @@ impl Board {
         Self {
             black: bitmask::BLACK_INITIAL,
             white: bitmask::WHITE_INITIAL,
-            turn: Color::black(),
+            turn: Color::BLACK,
             count: 0,
         }
     }
@@ -148,18 +148,13 @@ use derive_more::{From, Not};
 #[derive(Copy, Clone, PartialEq, From, Not)]
 pub struct Color(bool);
 
-pub const BLACK: bool = true;
-pub const WHITE: bool = false;
-
 impl Color {
-    pub fn black() -> Self {
-        Self(BLACK)
-    }
-    pub fn white() -> Self {
-        Self(WHITE)
-    }
+    pub const BLACK: Color = Self(true);
+
+    pub const WHITE: Color = Self(false);
+
     pub fn is_black(&self) -> bool {
-        self == &Self::black()
+        self == &Self::BLACK
     }
 }
 impl fmt::Debug for Color {

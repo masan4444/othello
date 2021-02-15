@@ -60,7 +60,7 @@ pub fn set_play_mode() -> Result<PlayMode, Box<dyn Error>> {
 
 pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
     let mut board = Board::new();
-    let com_color = Color::white();
+    let com_color = Color::WHITE;
     println!("{}", board);
 
     loop {
