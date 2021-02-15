@@ -26,7 +26,7 @@ impl Board {
         self.count
     }
     pub fn bitboards(&self) -> (u64, u64) {
-        if self.turn.is_black() {
+        if self.turn == Color::BLACK {
             (self.black, self.white)
         } else {
             (self.white, self.black)
@@ -34,7 +34,7 @@ impl Board {
     }
     pub fn reverse(&mut self, rev: u64, pos: usize) {
         let pos = 1u64 << pos;
-        if self.turn.is_black() {
+        if self.turn == Color::BLACK {
             self.black ^= pos | rev;
             self.white ^= rev;
         } else {
@@ -154,15 +154,10 @@ pub struct Color(bool);
 
 impl Color {
     pub const BLACK: Color = Self(true);
-
     pub const WHITE: Color = Self(false);
-
-    pub fn is_black(&self) -> bool {
-        self == &Self::BLACK
-    }
 }
 impl fmt::Debug for Color {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", if self.is_black() { "BLACK" } else { "WHITE" })
+        write!(f, "{}", if self == &Color::BLACK { "BLACK" } else { "WHITE" })
     }
 }
