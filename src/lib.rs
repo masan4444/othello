@@ -75,16 +75,13 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
             }
             break;
         } else if board.is_pass() {
-            println!("{:?} passed!", board.turn());
+            println!("{:?} passed!", board.get_turn());
         } else {
-            let pos = if mode == PlayMode::Computer && board.turn() == com_color {
-                com::choose_pos_concurrency(
-                    board.board(com_color),
-                    board.board(!com_color),
-                    board.get_count(),
-                )
+            let pos = if mode == PlayMode::Computer && board.get_turn() == com_color {
+                let (p, o) = board.bitboards();
+                com::choose_pos_concurrency(p, o, board.get_count())
             } else {
-                println!("You are {:?}", board.turn());
+                println!("You are {:?}", board.get_turn());
                 let legal_patt = board.legal_patt();
                 loop {
                     print!("Enter coordinate (example: \"c4\") > ");
@@ -97,7 +94,7 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
                 }
             };
             println!("");
-            println!("{:?} chose: {}", board.turn(), Coordinate::from(pos));
+            println!("{:?} chose: {}", board.get_turn(), Coordinate::from(pos));
             println!("");
             board.reverse(board.rev_patt(pos), pos);
         }

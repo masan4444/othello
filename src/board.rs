@@ -19,17 +19,17 @@ impl Board {
             count: 0,
         }
     }
-    pub fn turn(&self) -> Color {
+    pub fn get_turn(&self) -> Color {
         self.turn
     }
     pub fn get_count(&self) -> usize {
         self.count
     }
-    pub fn board(&self, color: Color) -> u64 {
-        if color.is_black() {
-            self.black
+    pub fn bitboards(&self) -> (u64, u64) {
+        if self.turn.is_black() {
+            (self.black, self.white)
         } else {
-            self.white
+            (self.white, self.black)
         }
     }
     pub fn reverse(&mut self, rev: u64, pos: usize) {
@@ -43,16 +43,20 @@ impl Board {
         }
     }
     pub fn is_pass(&self) -> bool {
-        bitboard::is_pass(self.board(self.turn), self.board(!self.turn))
+        let (p, o) = self.bitboards();
+        bitboard::is_pass(p, o)
     }
     pub fn is_finished(&self) -> bool {
-        bitboard::is_finished(self.board(self.turn), self.board(!self.turn))
+        let (p, o) = self.bitboards();
+        bitboard::is_finished(p, o)
     }
     pub fn legal_patt(&self) -> u64 {
-        bitboard::legal_patt_simd(self.board(self.turn), self.board(!self.turn))
+        let (p, o) = self.bitboards();
+        bitboard::legal_patt_simd(p, o)
     }
     pub fn rev_patt(&self, pos: usize) -> u64 {
-        bitboard::rev_patt_simd(self.board(self.turn), self.board(!self.turn), pos)
+        let (p, o) = self.bitboards();
+        bitboard::rev_patt_simd(p, o, pos)
     }
     pub fn next(&mut self) -> usize {
         self.turn = !self.turn;
