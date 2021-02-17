@@ -19,10 +19,10 @@ impl Board {
             count: 0,
         }
     }
-    pub fn get_turn(&self) -> Color {
+    pub fn turn(&self) -> Color {
         self.turn
     }
-    pub fn get_count(&self) -> usize {
+    pub fn count(&self) -> usize {
         self.count
     }
     pub fn bitboards(&self) -> (u64, u64) {
