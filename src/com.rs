@@ -15,8 +15,7 @@ use std::thread;
 
 #[inline]
 pub fn choose_pos(p: u64, o: u64, _index: usize) -> usize {
-    // nega_alpha(p, o, 11, 1)
-    nega_alpha_concurrency(p, o, 11, 1)
+    nega_alpha(p, o, 11, 1)
 }
 
 #[inline]
@@ -55,7 +54,6 @@ pub fn choose_pos_concurrency(p: u64, o: u64, _index: usize) -> usize {
             handles.push(handle);
         }
         legal_patt &= !(1u64 << pos);
-        break;
     }
 
     for handle in handles {
@@ -129,7 +127,6 @@ pub fn nega_alpha_concurrency(p: u64, o: u64, depth: usize, mode: usize) -> usiz
             handles.push(handle);
         }
         legal_patt &= !(1u64 << pos);
-        break;
     }
     for handle in handles {
         handle.join().unwrap();
