@@ -7,15 +7,12 @@ pub mod error;
 use board::{Board, Color, Coordinate};
 use std::convert::{From, TryFrom};
 use std::error::Error;
-use std::fmt;
 use std::io;
 use std::io::Write;
 
-use error::ApplicationError;
-
 #[cfg(test)]
 mod tests {
-    use super::board::bitboard::{self, bitmask};
+    use super::board::bitboard::bitmask;
 
     #[test]
     fn it_works() {
@@ -26,41 +23,15 @@ mod tests {
     }
 }
 
-#[derive(PartialEq)]
-pub enum PlayMode {
-    Computer = 1,
-    Frind = 2,
+pub struct Opt {
+    pub is_pvp: bool,
 }
 
-impl fmt::Display for PlayMode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            PlayMode::Computer => write!(f, "computer"),
-            PlayMode::Frind => write!(f, "friend"),
-        }
-    }
-}
-
-pub fn set_play_mode() -> Result<PlayMode, Box<dyn Error>> {
-    println!("Please choose play mode");
-    println!("Play with friend > input 1");
-    println!("Play with computer > input 2");
-
-    let mode = loop {
-        print!("mode > ");
-        match read_line()?.parse() {
-            Ok(1) => break PlayMode::Frind,
-            Ok(2) => break PlayMode::Computer,
-            Ok(_) => eprintln!("ApplicationError: {}", ApplicationError::InvalidModeError),
-            Err(e) => eprintln!("Error: {}", e),
-        }
-    };
-    Ok(mode)
-}
-
-pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
+pub fn run(opt: Opt) -> Result<(), Box<dyn Error>> {
     let mut board = Board::new();
     let com_color = Color::WHITE;
+    let is_pvp = opt.is_pvp;
+
     println!("{}", board);
 
     loop {
@@ -77,7 +48,7 @@ pub fn run(mode: PlayMode) -> Result<(), Box<dyn Error>> {
         } else if board.is_pass() {
             println!("{:?} passed!", board.turn());
         } else {
-            let pos = if mode == PlayMode::Computer && board.turn() == com_color {
+            let pos = if !is_pvp && board.turn() == com_color {
                 let (p, o) = board.bitboards();
                 com::choose_pos_concurrency(p, o, board.count())
             } else {
