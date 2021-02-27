@@ -10,15 +10,17 @@ pub struct Board {
     turn: Color,
     count: usize,
 }
-impl Board {
-    pub fn new() -> Self {
+impl Default for Board {
+    fn default() -> Self {
         Self {
             black: bitmask::BLACK_INITIAL,
             white: bitmask::WHITE_INITIAL,
             turn: Color::BLACK,
-            count: 0,
+            count: Default::default(),
         }
     }
+}
+impl Board {
     pub fn turn(&self) -> Color {
         self.turn
     }
@@ -158,6 +160,14 @@ impl Color {
 }
 impl fmt::Debug for Color {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", if self == &Color::BLACK { "BLACK" } else { "WHITE" })
+        write!(
+            f,
+            "{}",
+            if self == &Color::BLACK {
+                "BLACK"
+            } else {
+                "WHITE"
+            }
+        )
     }
 }

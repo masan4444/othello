@@ -14,7 +14,7 @@ pub struct Opt {
 }
 
 pub fn run(opt: Opt) -> Result<(), Box<dyn Error>> {
-    let mut board = Board::new();
+    let mut board = Board::default();
     let com_color = Color::WHITE;
 
     while !board.is_finished() {
@@ -41,9 +41,9 @@ pub fn run(opt: Opt) -> Result<(), Box<dyn Error>> {
                     };
                 }
             };
-            println!("");
+            println!();
             println!("{:?} chose: {}", board.turn(), Coordinate::from(pos));
-            println!("");
+            println!();
             board.reverse(board.rev_patt(pos), pos);
         }
         board.next();
