@@ -10,19 +10,6 @@ use std::error::Error;
 use std::io;
 use std::io::Write;
 
-#[cfg(test)]
-mod tests {
-    use super::board::bitboard::bitmask;
-
-    #[test]
-    fn it_works() {
-        let black: u64 = bitmask::BLACK_INITIAL;
-        let white: u64 = bitmask::WHITE_INITIAL;
-
-        assert_eq!((black | white).count_ones(), 4);
-    }
-}
-
 pub struct Opt {
     pub is_pvp: bool,
 }
