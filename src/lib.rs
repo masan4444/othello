@@ -30,28 +30,19 @@ pub struct Opt {
 pub fn run(opt: Opt) -> Result<(), Box<dyn Error>> {
     let mut board = Board::new();
     let com_color = Color::WHITE;
-    let is_pvp = opt.is_pvp;
 
-    println!("{}", board);
+    while !board.is_finished() {
+        println!("{}", board);
 
-    loop {
-        if board.is_finished() {
-            println!("Finish!");
-            let (black_count, white_count) = board.result();
-            println!("BLACK: {}, WHITE: {}", black_count, white_count);
-            if black_count == white_count {
-                println!("draw!");
-            } else {
-                println!("{:?} wins!", Color::from(black_count > white_count));
-            }
-            break;
-        } else if board.is_pass() {
+        if board.is_pass() {
             println!("{:?} passed!", board.turn());
         } else {
-            let pos = if !is_pvp && board.turn() == com_color {
+            let pos = if !opt.is_pvp && board.turn() == com_color {
+                // Com
                 let (p, o) = board.bitboards();
                 com::choose_pos_concurrency(p, o, board.count())
             } else {
+                // Player
                 println!("You are {:?}", board.turn());
                 let legal_patt = board.legal_patt();
                 loop {
@@ -70,7 +61,16 @@ pub fn run(opt: Opt) -> Result<(), Box<dyn Error>> {
             board.reverse(board.rev_patt(pos), pos);
         }
         board.next();
-        println!("{}", board);
+    }
+
+    println!("Finish!");
+    println!("{}", board);
+    let (black_count, white_count) = board.result();
+    println!("BLACK: {}, WHITE: {}", black_count, white_count);
+    if black_count == white_count {
+        println!("draw!");
+    } else {
+        println!("{:?} wins!", Color::from(black_count > white_count));
     }
     Ok(())
 }
