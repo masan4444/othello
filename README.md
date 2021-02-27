@@ -34,3 +34,19 @@ cargo bench
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup install nightly
 ```
+
+## TODO
+
+### UI
+
+- [] clickable text user interface
+
+### COM
+
+- [] optimized multithreading
+- [] move ordering
+- [] fixing evaluate function
+
+### Utilty
+
+- [] logging
