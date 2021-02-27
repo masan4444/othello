@@ -2,7 +2,6 @@
 
 pub mod board;
 pub mod com;
-pub mod error;
 
 use board::{Board, Color, Coordinate};
 use std::convert::{From, TryFrom};
